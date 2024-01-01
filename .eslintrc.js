@@ -29,4 +29,7 @@ module.exports = {
     'eslint-config-semistandard',
     'prettier',
   ],
+  globals: {
+    defineNuxtConfig: true,
+  },
 };
