@@ -9,6 +9,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { AppService } from './app.service';
+import { optimize } from 'svgo';
 
 @Controller()
 export class AppController {
@@ -33,8 +34,11 @@ export class AppController {
     )
     file: Express.Multer.File,
   ) {
+    const fileStr = file?.buffer.toString();
+    const result = optimize(fileStr);
+    console.log('vincent length', fileStr.length, result.data.length);
     return {
-      file: file?.buffer.toString(),
+      file: result.data,
     };
   }
 }

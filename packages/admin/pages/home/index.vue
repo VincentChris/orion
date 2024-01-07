@@ -35,11 +35,10 @@ import type { UploadProps } from 'element-plus';
 
 const imageUrl = ref('');
 
-const handleAvatarSuccess: UploadProps['onSuccess'] = (
-  response,
-  uploadFile,
-) => {
-  imageUrl.value = URL.createObjectURL(uploadFile.raw!);
+const handleAvatarSuccess: UploadProps['onSuccess'] = (response) => {
+  imageUrl.value = `data:image/svg+xml;utf8,${encodeURIComponent(
+    response.file,
+  )}`;
 };
 
 const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
