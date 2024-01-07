@@ -14,7 +14,7 @@
         <el-upload
           class="avatar-uploader"
           accept=".svg"
-          action="http://localhost:3001/upload"
+          :action="`${API_PREFIX}/api/upload`"
           :show-file-list="false"
           :on-success="handleAvatarSuccess"
           :before-upload="beforeAvatarUpload"
@@ -23,6 +23,35 @@
           <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
         </el-upload>
       </ElRow>
+      <ElRow justify="center" class="font-size-8 font-semibold mt-20 mb-10">
+        所有图片
+      </ElRow>
+      <ElRow justify="center">
+        <img
+          v-for="item in imageList"
+          :src="item"
+          :key="item"
+          class="w-8 mr-6"
+        />
+      </ElRow>
+      <ElRow justify="center" class="mt-20 mb-10">
+        <ElButton type="primary" @click="onGenerateClick"
+          >生成字体文件</ElButton
+        >
+      </ElRow>
+      <component is="style">
+        {{
+          `
+                @font-face {
+                font-family: 'MyWebFont';
+                src:
+                  url(${fontUrl}) format('woff'),
+              }
+          `
+        }}
+      </component>
+      <span>{{ fontUrl }}</span>
+      <span class="iconfont home"></span>
     </ElMain>
   </ElContainer>
 </template>
@@ -34,11 +63,12 @@ import { Plus } from '@element-plus/icons-vue';
 import type { UploadProps } from 'element-plus';
 
 const imageUrl = ref('');
-
+const imageList = ref([]);
+const fontUrl = ref('');
+const { API_PREFIX } = useAppConfig();
 const handleAvatarSuccess: UploadProps['onSuccess'] = (response) => {
-  imageUrl.value = `data:image/svg+xml;utf8,${encodeURIComponent(
-    response.file,
-  )}`;
+  imageUrl.value = `${API_PREFIX}${response.file}`;
+  getAllSvgs();
 };
 
 const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
@@ -52,6 +82,37 @@ const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
   }
   return true;
 };
+const getAllSvgs = () => {
+  fetch(`${API_PREFIX}/api/allSvgs`, { method: 'GET' })
+    .then((response) => response.json())
+    .then((res) => {
+      imageList.value = res.map((item: string) => `${API_PREFIX}${item}`);
+      console.log('vicnent res', res);
+    });
+};
+const generateIconFont = () => {
+  fetch(`${API_PREFIX}/api/generateFont`, { method: 'GET' })
+    .then((response) => response.json())
+    .then((res) => {
+      const url = `${API_PREFIX}${res.url}`;
+      console.log('vincent font', fontUrl);
+      const style = document.createElement('style');
+      style.type = 'text/css';
+      style.appendChild(
+        document.createTextNode(
+          `@font-face {font-family: 'MyFont'; src: url(${url}) format('woff');}`,
+        ),
+      );
+      document.head.appendChild(style);
+    });
+};
+
+const onGenerateClick = () => {
+  generateIconFont();
+};
+onMounted(() => {
+  getAllSvgs();
+});
 </script>
 
 <style scoped>

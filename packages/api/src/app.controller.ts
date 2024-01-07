@@ -9,7 +9,8 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { AppService } from './app.service';
-import { optimize } from 'svgo';
+import { diskStorage } from 'multer';
+import { join } from 'path';
 
 @Controller()
 export class AppController {
@@ -20,7 +21,16 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: join(__dirname, '..', 'client', 'svg'),
+        filename: (req, file, callback) => {
+          callback(null, `${file.originalname}`);
+        },
+      }),
+    }),
+  )
   @Post('upload')
   uploadFileAndPassValidation(
     @UploadedFile(
@@ -34,11 +44,18 @@ export class AppController {
     )
     file: Express.Multer.File,
   ) {
-    const fileStr = file?.buffer.toString();
-    const result = optimize(fileStr);
-    console.log('vincent length', fileStr.length, result.data.length);
     return {
-      file: result.data,
+      file: `/svg/${file.filename}`,
     };
+  }
+
+  @Get('allSvgs')
+  getAllSvgs() {
+    return this.appService.getAllSvgUrls();
+  }
+
+  @Get('generateFont')
+  generateFont() {
+    return this.appService.generateFontBySvg();
   }
 }
